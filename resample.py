@@ -13,13 +13,20 @@ data = src_ds.read(
     resampling = Resampling.bilinear
 )
 
+# scale image transform
+transform = src_ds.transform * src_ds.transform.scale(
+    (src_ds.width / data.shape[-1]),
+    (src_ds.height / data.shape[-2])
+)
+
 # open target file and write resampled data
 with rasterio.Env():
     
     # getting profile to open targer file and changing it
     profile = src_ds.profile
     profile.update(
-        width = 601
+        width = 601,
+        transform = transform
     )
 
     # open and write
