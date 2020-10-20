@@ -66,13 +66,13 @@ with open(csv_filename, 'w', newline='') as csvfile:
 
     wrtr = csv.writer(csvfile, delimiter = ';',
                       quotechar = '\"', quoting = csv.QUOTE_ALL)
-    wrtr.writerow(['Longitude', 'Latitude', 'Elevation', 'Landscape type'])
+    wrtr.writerow(['Longitude', 'Latitude', 'Parameter'])
 
     for i in range(ds.height):
         for j in range(ds.width):
             lat, lon = ds.xy(i, j)
             elev = data[i][j]
-            wrtr.writerow([lon, lat, elev, ''])
+            wrtr.writerow([lon, lat, elev])
 
 print('Parsing is done.')
 quit()
