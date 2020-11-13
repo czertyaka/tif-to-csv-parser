@@ -2,34 +2,39 @@
 
 import rasterio
 from rasterio.enums import Resampling
+import rasterio.crs
 import numpy
 import csv
 import sys
 
-if len(sys.argv) > 2:
+help_str = "Usage:\n\t./tif-to-csv-parser.py <your_file>.tif <resolution>"
+
+if len(sys.argv) > 3:
     print("Too much arguments")
-    print("Usage:\n\t./tif-to-csv-parser.py <your_file>.tif")
+    print(help)
     quit(1)
 
 if len(sys.argv) == 1:
     print("Too few arguments")
-    print("Usage:\n\t./tif-to-csv-parser.py <your_file>.tif")
+    print(help)
     quit(1)
 
 if str(sys.argv[1]) == "--help" or str(sys.argv[1]) == "-h":
-    print("Usage:\n\t./tif-to-csv-parser.py <your_file>.tif")
+    print(help)
     quit(0)
 
 src_filename = str(sys.argv[1])
 rsmpld_filename = "rsmpld_" + src_filename
 csv_filename = src_filename.replace("tif", "csv")
 
+resolution = int(sys.argv[2])
+
 print('Running resampling...')
 
 # open source file, read and resample
 src_ds = rasterio.open(src_filename)
 data = src_ds.read(
-    out_shape = (src_ds.count, 601, 601),
+    out_shape = (src_ds.count, resolution, resolution),
     resampling = Resampling.bilinear
 )
 
@@ -45,7 +50,8 @@ with rasterio.Env():
     # getting profile to open targer file and changing it
     profile = src_ds.profile
     profile.update(
-        width = 601,
+        width = resolution,
+        height = resolution,
         transform = transform
     )
 
@@ -60,19 +66,20 @@ print('Running parsing...')
 # open source file and read data
 ds = rasterio.open(rsmpld_filename)
 data = ds.read(1)
+epsg_format = ds.crs.to_dict().get('init')
 
 # parse to csv
 with open(csv_filename, 'w', newline='') as csvfile:
 
     wrtr = csv.writer(csvfile, delimiter = ';',
                       quotechar = '\"', quoting = csv.QUOTE_ALL)
-    wrtr.writerow(['Longitude', 'Latitude', 'Parameter'])
+    wrtr.writerow(['Latitude ' + epsg_format, 'Longitude ' + epsg_format, 'Parameter'])
 
     for i in range(ds.height):
         for j in range(ds.width):
             lat, lon = ds.xy(i, j)
-            elev = data[i][j]
-            wrtr.writerow([lon, lat, elev])
+            param = data[i][j]
+            wrtr.writerow([lon, lat, param])
 
 print('Parsing is done.')
 quit()

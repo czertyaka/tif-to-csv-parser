@@ -1,0 +1,4 @@
+*.tif
+!example.tif
+*.csv
+.vscode/
